@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Recipe Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-cog"></i> Settings</h1>
+            <p>Configure your Recipe Generator app</p>
+        </header>
+
+        <main>
+            <!-- API Key Section -->
+            <section class="settings-section">
+                <h2><i class="fas fa-key"></i> OpenAI API Key</h2>
+                <div class="settings-content">
+                    <p class="settings-description">
+                        Enter your OpenAI API key to enable AI-powered recipe generation. 
+                        Your key is stored securely in your browser's local storage and never shared.
+                    </p>
+                    
+                    <div class="api-key-form">
+                        <div class="form-group">
+                            <label for="apiKeyInput">OpenAI API Key:</label>
+                            <div class="input-with-toggle">
+                                <input type="password" id="apiKeyInput" placeholder="sk-..." />
+                                <button type="button" id="togglePassword" class="btn-toggle">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button id="saveApiKey" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save API Key
+                            </button>
+                            <button id="testApiKey" class="btn btn-generate">
+                                <i class="fas fa-vial"></i> Test Connection
+                            </button>
+                            <button id="clearApiKey" class="btn btn-remove">
+                                <i class="fas fa-trash"></i> Clear Key
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="api-status" id="apiStatus">
+                        <!-- Status will be displayed here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Management Section -->
+            <section class="settings-section">
+                <h2><i class="fas fa-database"></i> Data Management</h2>
+                <div class="settings-content">
+                    <p class="settings-description">
+                        Manage your saved data including ingredients and recipes.
+                    </p>
+                    
+                    <div class="data-actions">
+                        <button id="exportData" class="btn btn-share">
+                            <i class="fas fa-download"></i> Export Data
+                        </button>
+                        <button id="importData" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Import Data
+                        </button>
+                        <button id="clearAllData" class="btn btn-remove">
+                            <i class="fas fa-trash-alt"></i> Clear All Data
+                        </button>
+                    </div>
+                    
+                    <input type="file" id="importFile" accept=".json" style="display: none;" />
+                </div>
+            </section>
+
+            <!-- App Info Section -->
+            <section class="settings-section">
+                <h2><i class="fas fa-info-circle"></i> App Information</h2>
+                <div class="settings-content">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <strong>Version:</strong> 1.0.0
+                        </div>
+                        <div class="info-item">
+                            <strong>Storage Used:</strong> <span id="storageUsed">Calculating...</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Saved Recipes:</strong> <span id="savedRecipesCount">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Saved Ingredients:</strong> <span id="savedIngredientsCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Navigation -->
+            <section class="settings-section">
+                <div class="settings-content">
+                    <a href="index.html" class="btn btn-primary" style="width: 100%; text-align: center;">
+                        <i class="fas fa-arrow-left"></i> Back to Recipe Generator
+                    </a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="settings.js"></script>
+</body>
+</html> 

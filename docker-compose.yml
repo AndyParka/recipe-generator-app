@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  recipe-app:
+    build: .
+    ports:
+      - "8080:80"
+    container_name: recipe-generator
+    restart: unless-stopped
+    volumes:
+      # Optional: Mount logs for debugging
+      - ./logs:/var/log/nginx
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s 

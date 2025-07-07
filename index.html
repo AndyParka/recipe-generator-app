@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-utensils"></i> Recipe Generator</h1>
+            <p>Turn your available ingredients into delicious meals</p>
+            <a href="settings.html" class="settings-link">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </header>
+
+        <main>
+            <!-- Ingredients Section -->
+            <section class="ingredients-section">
+                <h2><i class="fas fa-carrot"></i> Available Ingredients</h2>
+                <div class="ingredients-input">
+                    <input type="text" id="ingredientInput" placeholder="Add an ingredient (e.g., chicken, rice, tomatoes)">
+                    <button id="addIngredient" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                </div>
+                <div class="ingredients-list" id="ingredientsList">
+                    <!-- Ingredients will be added here dynamically -->
+                </div>
+            </section>
+
+            <!-- Recipe Generation Section -->
+            <section class="recipe-section">
+                <h2><i class="fas fa-magic"></i> What are you craving?</h2>
+                <div class="prompt-section">
+                    <textarea id="promptInput" placeholder="Tell us what you're in the mood for...&#10;&#10;Examples:&#10;• Quick and healthy dinner&#10;• Comfort food for a cold day&#10;• Light lunch with fresh flavors&#10;• Spicy Asian-inspired dish&#10;• Vegetarian pasta dish"></textarea>
+                    <button id="generateRecipes" class="btn btn-generate">
+                        <i class="fas fa-wand-magic-sparkles"></i> Generate Recipes
+                    </button>
+                </div>
+            </section>
+
+            <!-- Generated Recipes Section -->
+            <section class="recipes-section" id="recipesSection" style="display: none;">
+                <h2><i class="fas fa-book-open"></i> Your Recipes</h2>
+                <div class="loading" id="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Generating delicious recipes...</p>
+                </div>
+                <div class="recipes-container" id="recipesContainer">
+                    <!-- Recipes will be generated here -->
+                </div>
+            </section>
+
+            <!-- Saved Recipes Section -->
+            <section class="saved-section">
+                <h2><i class="fas fa-heart"></i> Saved Recipes</h2>
+                <div class="saved-recipes" id="savedRecipes">
+                    <!-- Saved recipes will be displayed here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Welcome Modal -->
+    <div class="modal-overlay" id="welcomeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-rocket"></i> Welcome to Recipe Generator!</h2>
+                <button class="modal-close" id="closeWelcomeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="welcome-step">
+                    <h3><i class="fas fa-key"></i> Step 1: Get Your OpenAI API Key</h3>
+                    <p>To generate AI-powered recipes, you'll need an OpenAI API key:</p>
+                    <ol>
+                        <li>Go to <a href="https://platform.openai.com/" target="_blank" rel="noopener">OpenAI Platform</a></li>
+                        <li>Sign up or log in to your account</li>
+                        <li>Navigate to "API Keys" in your dashboard</li>
+                        <li>Click "Create new secret key"</li>
+                        <li>Copy your new API key (it starts with "sk-")</li>
+                    </ol>
+                    <div class="api-key-note">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> You'll need to add payment information to your OpenAI account to use the API.
+                    </div>
+                </div>
+                
+                <div class="welcome-step">
+                    <h3><i class="fas fa-cog"></i> Step 2: Add Your API Key</h3>
+                    <p>Once you have your API key:</p>
+                    <ol>
+                        <li>Click the "Settings" button in the top-right corner</li>
+                        <li>Enter your API key in the "OpenAI API Key" field</li>
+                        <li>Click "Save API Key"</li>
+                        <li>Optionally test the connection with "Test Connection"</li>
+                    </ol>
+                </div>
+                
+                <div class="welcome-step">
+                    <h3><i class="fas fa-utensils"></i> Step 3: Start Cooking!</h3>
+                    <p>Now you can:</p>
+                    <ul>
+                        <li>Add your available ingredients</li>
+                        <li>Describe what you're craving</li>
+                        <li>Generate delicious AI-powered recipes</li>
+                        <li>Save your favorite recipes</li>
+                    </ul>
+                </div>
+                
+                <div class="welcome-actions">
+                    <button class="btn btn-primary" onclick="openSettings()">
+                        <i class="fas fa-cog"></i> Go to Settings
+                    </button>
+                    <button class="btn btn-generate" onclick="closeWelcomeModal()">
+                        <i class="fas fa-play"></i> Get Started
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
