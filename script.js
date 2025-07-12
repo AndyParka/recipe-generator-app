@@ -2,6 +2,7 @@ class RecipeApp {
     constructor() {
         this.ingredients = [];
         this.savedRecipes = [];
+        this.isGenerating = false;
         this.init();
     }
 
@@ -82,10 +83,15 @@ class RecipeApp {
         const recipesSection = document.getElementById('recipesSection');
         const loading = document.getElementById('loading');
         const container = document.getElementById('recipesContainer');
+        const generateButton = document.getElementById('generateRecipes');
 
         recipesSection.style.display = 'block';
         loading.style.display = 'block';
         container.innerHTML = '';
+        
+        // Disable the generate button to prevent multiple clicks
+        generateButton.disabled = true;
+        generateButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
 
         try {
             const recipes = await this.callChatGPT(prompt);
@@ -95,11 +101,18 @@ class RecipeApp {
             
             if (error.message.includes('No valid OpenAI API key')) {
                 this.showToast('Please set up your OpenAI API key first. Check the README for instructions.', 'error');
+            } else if (error.message.includes('Rate limit exceeded')) {
+                this.showToast('Rate limit exceeded. Please wait 30 seconds and try again.', 'error');
+            } else if (error.message.includes('Please wait, recipe generation in progress')) {
+                this.showToast('Please wait, recipe generation in progress...', 'error');
             } else {
                 this.showToast('Failed to generate recipes. Please try again.', 'error');
             }
         } finally {
             loading.style.display = 'none';
+            // Re-enable the generate button
+            generateButton.disabled = false;
+            generateButton.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Generate Recipes';
         }
     }
 
@@ -111,6 +124,13 @@ class RecipeApp {
             // Show error if no valid API key is found
             throw new Error('No valid OpenAI API key found. Please set up your API key in the Settings page.');
         }
+
+        // Add rate limiting - prevent multiple simultaneous requests
+        if (this.isGenerating) {
+            throw new Error('Please wait, recipe generation in progress...');
+        }
+
+        this.isGenerating = true;
 
         try {
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -134,7 +154,19 @@ class RecipeApp {
             });
             
             if (!response.ok) {
-                throw new Error(`API request failed: ${response.status}`);
+                let errorMessage = `API request failed: ${response.status}`;
+                
+                if (response.status === 429) {
+                    errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+                } else if (response.status === 401) {
+                    errorMessage = 'Invalid API key. Please check your settings.';
+                } else if (response.status === 402) {
+                    errorMessage = 'Payment required. Please add payment method to your OpenAI account.';
+                } else if (response.status === 500) {
+                    errorMessage = 'OpenAI service error. Please try again later.';
+                }
+                
+                throw new Error(errorMessage);
             }
             
             const data = await response.json();
@@ -142,11 +174,20 @@ class RecipeApp {
             return recipes;
             
         } catch (error) {
+            // Don't show fallback message for rate limits - let user retry
+            if (error.message.includes('Rate limit exceeded')) {
+                console.error('Rate limit error:', error.message);
+                throw error;
+            }
+            
             console.error('ChatGPT API error:', error);
-            // Fallback to mock recipes on error
+            
+            // Fallback to mock recipes for other errors
             this.showToast('API error, showing sample recipes', 'error');
             await new Promise(resolve => setTimeout(resolve, 1000));
             return this.generateMockRecipes(prompt);
+        } finally {
+            this.isGenerating = false;
         }
     }
 
@@ -529,30 +570,4 @@ document.addEventListener('DOMContentLoaded', () => {
     app = new RecipeApp();
 });
 
-// For ChatGPT API integration, you would replace the callChatGPT method with something like:
-/*
-async callChatGPT(prompt) {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${YOUR_API_KEY}`
-        },
-        body: JSON.stringify({
-            model: 'gpt-3.5-turbo',
-            messages: [{
-                role: 'system',
-                content: 'You are a helpful cooking assistant. Generate 3 simple recipes based on available ingredients and user preferences. Format each recipe with: 1. Ingredients list for 2 people, 2. Step-by-step method with cooking times, 3. Optional extras for garnish and alternatives. Keep it concise and easy to follow.'
-            }, {
-                role: 'user',
-                content: `Available ingredients: ${this.ingredients.join(', ')}. User request: ${prompt}`
-            }],
-            max_tokens: 1000,
-            temperature: 0.7
-        })
-    });
-    
-    const data = await response.json();
-    return this.parseChatGPTResponse(data.choices[0].message.content);
-}
-*/ 
+ 
