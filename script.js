@@ -117,22 +117,32 @@ class RecipeApp {
     }
 
     async callChatGPT(prompt) {
+        console.log('🔍 Debug: Starting recipe generation...');
+        
         // Check if we have a valid API key from localStorage
         const apiKey = localStorage.getItem('recipeApp_openai_key');
         
         if (!apiKey) {
+            console.error('❌ Debug: No API key found');
             // Show error if no valid API key is found
             throw new Error('No valid OpenAI API key found. Please set up your API key in the Settings page.');
         }
 
+        console.log('✅ Debug: API key found, length:', apiKey.length);
+
         // Add rate limiting - prevent multiple simultaneous requests
         if (this.isGenerating) {
+            console.warn('⚠️ Debug: Already generating, preventing duplicate request');
             throw new Error('Please wait, recipe generation in progress...');
         }
 
         this.isGenerating = true;
+        console.log('🚀 Debug: Making API request to OpenAI...');
 
         try {
+            console.log('📤 Debug: Sending request with ingredients:', this.ingredients);
+            console.log('📤 Debug: User prompt:', prompt);
+            
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -143,17 +153,18 @@ class RecipeApp {
                     model: 'gpt-3.5-turbo',
                     messages: [{
                         role: 'system',
-                        content: 'You are a helpful cooking assistant. Generate 3 simple recipes based on available ingredients and user preferences. Format each recipe with: 1. Ingredients list for 2 people, 2. Step-by-step method with cooking times, 3. Optional extras for garnish and alternatives. Keep it concise and easy to follow. Return the response in a structured format that can be parsed.'
+                        content: 'You are a helpful cooking assistant. Generate exactly 3 simple recipes based on available ingredients and user preferences. Use the ingredients listed as a guide and add/remove ingredients as needed. Follow this EXACT format and use these examples as your guide for quality:\n\n1. Quick Stir-Fry Delight\nIngredients:\n- 2 cups mixed vegetables (from your available ingredients)\n- 1 cup protein (chicken, tofu, or beef if available)\n- 2 tbsp olive oil\n- 2 cloves garlic, minced\n- 1 tbsp soy sauce\n- Salt and pepper to taste\n\nMethod:\n- Heat olive oil in a large wok or pan over high heat (2 minutes)\n- Add minced garlic and stir for 30 seconds\n- Add protein and cook for 3-4 minutes until browned\n- Add vegetables and stir-fry for 4-5 minutes\n- Season with soy sauce, salt, and pepper\n- Serve hot over rice or noodles\n\nOptional Extras:\n- Garnish with fresh herbs or green onions\n- Add a squeeze of lime for brightness\n- Serve with steamed rice or noodles\n\n2. One-Pan Wonder\nIngredients:\n- 1 lb protein of choice\n- 2 cups vegetables\n- 1 cup grains (rice, quinoa, or pasta)\n- 2 tbsp olive oil\n- Herbs and spices to taste\n\nMethod:\n- Preheat oven to 400°F (5 minutes)\n- Season protein with herbs and spices (2 minutes)\n- Arrange protein and vegetables on a baking sheet (3 minutes)\n- Drizzle with olive oil and bake for 20-25 minutes\n- Cook grains separately according to package instructions\n- Serve protein and vegetables over grains\n\nOptional Extras:\n- Add a simple sauce made from available ingredients\n- Garnish with fresh herbs\n- Serve with a side salad\n\n3. Quick Soup or Stew\nIngredients:\n- 4 cups broth or water\n- 2 cups mixed vegetables\n- 1 cup protein\n- 1 onion, diced\n- 2 cloves garlic, minced\n- Herbs and spices to taste\n\nMethod:\n- Sauté onion and garlic in oil until softened (3 minutes)\n- Add protein and brown for 2-3 minutes\n- Add broth and bring to boil (5 minutes)\n- Add vegetables and simmer for 10-15 minutes\n- Season with herbs, salt, and pepper\n- Serve hot with bread or crackers\n\nOptional Extras:\n- Add a dollop of yogurt or cream for richness\n- Garnish with fresh herbs\n- Serve with crusty bread\n\nIMPORTANT: Follow this exact format with bullet points (-) for all lists. Include approximate timing in parentheses for method steps. Make recipes practical and easy to follow. If recipes would be too similar, include a wildcard recipe that uses only 1-2 of the listed ingredients. Do not use numbered steps in the method section.'
                     }, {
                         role: 'user',
-                        content: `Available ingredients: ${this.ingredients.join(', ')}. User request: ${prompt}`
-                    }],
-                    max_tokens: 1000,
-                    temperature: 0.7
+                        content: "Available ingredients: " + this.ingredients.join(', ') + ". User request: " + prompt
+                    }]
                 })
             });
             
+            console.log('📥 Debug: Response status:', response.status);
+            
             if (!response.ok) {
+                console.error('❌ Debug: API request failed with status:', response.status);
                 let errorMessage = `API request failed: ${response.status}`;
                 
                 if (response.status === 429) {
@@ -166,37 +177,39 @@ class RecipeApp {
                     errorMessage = 'OpenAI service error. Please try again later.';
                 }
                 
+                console.error('❌ Debug: Error message:', errorMessage);
                 throw new Error(errorMessage);
             }
             
+            console.log('✅ Debug: API request successful');
+            
             const data = await response.json();
+            console.log('📥 Debug: Received response data:', data);
+            console.log('📝 Debug: Response content:', data.choices[0].message.content);
+            
             const recipes = this.parseChatGPTResponse(data.choices[0].message.content);
+            console.log('🍳 Debug: Parsed recipes:', recipes);
             return recipes;
             
         } catch (error) {
-            // Don't show fallback message for rate limits - let user retry
-            if (error.message.includes('Rate limit exceeded')) {
-                console.error('Rate limit error:', error.message);
-                throw error;
-            }
-            
-            console.error('ChatGPT API error:', error);
+            console.error('❌ Debug: ChatGPT API error:', error);
+            console.error('❌ Debug: Error message:', error.message);
             
             // Fallback to mock recipes for other errors
             this.showToast('API error, showing sample recipes', 'error');
             await new Promise(resolve => setTimeout(resolve, 1000));
             return this.generateMockRecipes(prompt);
+
         } finally {
+
             this.isGenerating = false;
         }
     }
 
     parseChatGPTResponse(responseText) {
-        // Parse the ChatGPT response and convert it to our recipe format
-        // This is a simplified parser - you might want to enhance it based on your needs
+        console.log('🔍 Debug: Parsing ChatGPT response...');
         
         try {
-            // Try to extract recipes from the response
             const recipes = [];
             const lines = responseText.split('\n');
             let currentRecipe = null;
@@ -205,8 +218,11 @@ class RecipeApp {
             for (let line of lines) {
                 line = line.trim();
                 
-                // Look for recipe titles (usually numbered or have "Recipe" in them)
-                if (line.match(/^\d+\.\s*[A-Z]/) || line.includes('Recipe') || line.includes('recipe')) {
+                // Skip empty lines
+                if (!line) continue;
+                
+                // Look for recipe titles (numbered recipes)
+                if (line.match(/^\d+\.\s*[A-Z]/)) {
                     if (currentRecipe) {
                         recipes.push(currentRecipe);
                     }
@@ -217,24 +233,33 @@ class RecipeApp {
                         extras: []
                     };
                     currentSection = null;
+                    console.log('🍳 Debug: Found recipe:', currentRecipe.title);
                 }
                 // Look for section headers
-                else if (line.toLowerCase().includes('ingredient')) {
+                else if (line.toLowerCase().includes('ingredients:')) {
                     currentSection = 'ingredients';
+                    console.log('📝 Debug: Found ingredients section');
                 }
-                else if (line.toLowerCase().includes('method') || line.toLowerCase().includes('instruction')) {
+                else if (line.toLowerCase().includes('method:') || line.toLowerCase().includes('instructions:')) {
                     currentSection = 'method';
+                    console.log('📝 Debug: Found method section');
                 }
-                else if (line.toLowerCase().includes('extra') || line.toLowerCase().includes('garnish')) {
+                else if (line.toLowerCase().includes('optional') || line.toLowerCase().includes('garnish') || line.toLowerCase().includes('alternative')) {
                     currentSection = 'extras';
+                    console.log('📝 Debug: Found extras section');
                 }
                 // Add content to current section
                 else if (line && currentRecipe && currentSection) {
+                    // Remove bullet points and clean up
                     if (line.startsWith('-') || line.startsWith('•')) {
                         line = line.substring(1).trim();
                     }
+                    // Remove numbered steps
+                    line = line.replace(/^\d+\.\s*/, '');
+                    
                     if (line) {
                         currentRecipe[currentSection].push(line);
+                        console.log(`📝 Debug: Added to ${currentSection}:`, line);
                     }
                 }
             }
@@ -244,9 +269,11 @@ class RecipeApp {
                 recipes.push(currentRecipe);
             }
             
+            console.log('🍳 Debug: Parsed recipes count:', recipes.length);
+            
             // If we couldn't parse properly, fall back to mock recipes
             if (recipes.length === 0) {
-                console.log('Could not parse ChatGPT response, using mock recipes');
+                console.log('❌ Debug: Could not parse ChatGPT response, using mock recipes');
                 return this.generateMockRecipes(prompt);
             }
             
@@ -268,7 +295,7 @@ class RecipeApp {
             return recipes;
             
         } catch (error) {
-            console.error('Error parsing ChatGPT response:', error);
+            console.error('❌ Debug: Error parsing ChatGPT response:', error);
             return this.generateMockRecipes(prompt);
         }
     }
@@ -377,6 +404,15 @@ class RecipeApp {
         recipes.forEach((recipe, index) => {
             const recipeCard = document.createElement('div');
             recipeCard.className = 'recipe-card';
+            
+            // Only show Optional Extras section if there are extras
+            const extrasSection = recipe.extras && recipe.extras.length > 0 
+                ? `<h4>Optional Extras:</h4>
+                   <ul>
+                       ${recipe.extras.map(extra => `<li>${extra}</li>`).join('')}
+                   </ul>`
+                : '';
+            
             recipeCard.innerHTML = `
                 <div class="recipe-title">${recipe.title}</div>
                 <div class="recipe-content">
@@ -390,10 +426,7 @@ class RecipeApp {
                         ${recipe.method.map(step => `<li>${step}</li>`).join('')}
                     </ul>
                     
-                    <h4>Optional Extras:</h4>
-                    <ul>
-                        ${recipe.extras.map(extra => `<li>${extra}</li>`).join('')}
-                    </ul>
+                    ${extrasSection}
                 </div>
                 <div class="recipe-actions">
                     <button class="btn btn-save" onclick="app.saveRecipe(${index})">
@@ -419,6 +452,8 @@ class RecipeApp {
                 timestamp: new Date().toISOString()
             };
             
+            // The content already includes the conditional extras section from displayRecipes
+            // so it will be saved correctly whether extras exist or not
             this.savedRecipes.push(recipeData);
             this.saveToStorage();
             this.renderSavedRecipes();
@@ -568,6 +603,43 @@ function closeWelcomeModal() {
 let app;
 document.addEventListener('DOMContentLoaded', () => {
     app = new RecipeApp();
+    
+    // Debug commands - you can run these in the browser console
+    window.debugApp = {
+        // Test API key
+        testApiKey: () => {
+            const key = localStorage.getItem('recipeApp_openai_key');
+            console.log('API Key exists:', !!key, 'Length:', key ? key.length : 0);
+        },
+        
+        // Test ingredients
+        testIngredients: () => {
+            console.log('Current ingredients:', app.ingredients);
+        },
+        
+        // Test recipe generation
+        testRecipeGeneration: () => {
+            console.log('Testing recipe generation...');
+            app.generateRecipes();
+        },
+        
+        // Clear all data
+        clearAllData: () => {
+            localStorage.clear();
+            location.reload();
+        },
+        
+        // Show all localStorage
+        showStorage: () => {
+            console.log('All localStorage:', {
+                ingredients: localStorage.getItem('recipeApp_ingredients'),
+                recipes: localStorage.getItem('recipeApp_savedRecipes'),
+                apiKey: localStorage.getItem('recipeApp_openai_key') ? 'EXISTS' : 'NOT FOUND'
+            });
+        }
+    };
+    
+    console.log('🔧 Debug commands available: debugApp.testApiKey(), debugApp.testIngredients(), etc.');
 });
 
  
