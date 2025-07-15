@@ -1,0 +1,7 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/recipeapp/public_html
+    - echo "Deploying to $DEPLOYPATH"
+    - /bin/cp -r * $DEPLOYPATH
+    - echo "Deployment complete."
