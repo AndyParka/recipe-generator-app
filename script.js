@@ -11,7 +11,6 @@ class RecipeApp {
         this.setupEventListeners();
         this.renderIngredients();
         this.renderSavedRecipes();
-        this.checkFirstTimeUser();
     }
 
     setupEventListeners() {
@@ -23,9 +22,6 @@ class RecipeApp {
 
         // Generate recipes
         document.getElementById('generateRecipes').addEventListener('click', () => this.generateRecipes());
-
-        // Welcome modal
-        document.getElementById('closeWelcomeModal').addEventListener('click', () => this.closeWelcomeModal());
     }
 
     addIngredient() {
@@ -99,12 +95,20 @@ class RecipeApp {
         } catch (error) {
             console.error('Error generating recipes:', error);
             
+            const useProxy = localStorage.getItem('recipeApp_use_proxy') !== 'false';
+            
             if (error.message.includes('No valid OpenAI API key')) {
-                this.showToast('Please set up your OpenAI API key first. Check the README for instructions.', 'error');
+                if (useProxy) {
+                    this.showToast('Proxy service error. Please try again later.', 'error');
+                } else {
+                    this.showToast('Please set up your OpenAI API key first. Check the README for instructions.', 'error');
+                }
             } else if (error.message.includes('Rate limit exceeded')) {
                 this.showToast('Rate limit exceeded. Please wait 30 seconds and try again.', 'error');
             } else if (error.message.includes('Please wait, recipe generation in progress')) {
                 this.showToast('Please wait, recipe generation in progress...', 'error');
+            } else if (error.message.includes('Proxy API')) {
+                this.showToast('Proxy service error. Please try again later.', 'error');
             } else {
                 this.showToast('Failed to generate recipes. Please try again.', 'error');
             }
@@ -119,12 +123,24 @@ class RecipeApp {
     async callChatGPT(prompt) {
         console.log('🔍 Debug: Starting recipe generation...');
         
+        // Check API mode
+        const useProxy = localStorage.getItem('recipeApp_use_proxy') !== 'false';
+        
+        if (useProxy) {
+            return await this.callChatGPTProxy(prompt);
+        } else {
+            return await this.callChatGPTDirect(prompt);
+        }
+    }
+
+    async callChatGPTDirect(prompt) {
+        console.log('🔍 Debug: Using direct API mode...');
+        
         // Check if we have a valid API key from localStorage
         const apiKey = localStorage.getItem('recipeApp_openai_key');
         
         if (!apiKey) {
             console.error('❌ Debug: No API key found');
-            // Show error if no valid API key is found
             throw new Error('No valid OpenAI API key found. Please set up your API key in the Settings page.');
         }
 
@@ -137,7 +153,7 @@ class RecipeApp {
         }
 
         this.isGenerating = true;
-        console.log('🚀 Debug: Making API request to OpenAI...');
+        console.log('🚀 Debug: Making direct API request to OpenAI...');
 
         try {
             console.log('📤 Debug: Sending request with ingredients:', this.ingredients);
@@ -201,7 +217,81 @@ class RecipeApp {
             return this.generateMockRecipes(prompt);
 
         } finally {
+            this.isGenerating = false;
+        }
+    }
 
+    async callChatGPTProxy(prompt) {
+        console.log('🔍 Debug: Using proxy API mode...');
+        
+        // Add rate limiting - prevent multiple simultaneous requests
+        if (this.isGenerating) {
+            console.warn('⚠️ Debug: Already generating, preventing duplicate request');
+            throw new Error('Please wait, recipe generation in progress...');
+        }
+
+        this.isGenerating = true;
+        console.log('🚀 Debug: Making proxy API request...');
+
+        try {
+            console.log('📤 Debug: Sending request with ingredients:', this.ingredients);
+            console.log('📤 Debug: User prompt:', prompt);
+            
+            const response = await fetch('https://openai-proxy.andy-parka.workers.dev/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'gpt-3.5-turbo',
+                    messages: [{
+                        role: 'system',
+                        content: 'You are a helpful cooking assistant. Generate exactly 3 simple recipes based on available ingredients and user preferences. Use the ingredients listed as a guide and add/remove ingredients as needed. Follow this EXACT format and use these examples as your guide for quality:\n\n1. Quick Stir-Fry Delight\nIngredients:\n- 2 cups mixed vegetables (from your available ingredients)\n- 1 cup protein (chicken, tofu, or beef if available)\n- 2 tbsp olive oil\n- 2 cloves garlic, minced\n- 1 tbsp soy sauce\n- Salt and pepper to taste\n\nMethod:\n- Heat olive oil in a large wok or pan over high heat (2 minutes)\n- Add minced garlic and stir for 30 seconds\n- Add protein and cook for 3-4 minutes until browned\n- Add vegetables and stir-fry for 4-5 minutes\n- Season with soy sauce, salt, and pepper\n- Serve hot over rice or noodles\n\nOptional Extras:\n- Garnish with fresh herbs or green onions\n- Add a squeeze of lime for brightness\n- Serve with steamed rice or noodles\n\n2. One-Pan Wonder\nIngredients:\n- 1 lb protein of choice\n- 2 cups vegetables\n- 1 cup grains (rice, quinoa, or pasta)\n- 2 tbsp olive oil\n- Herbs and spices to taste\n\nMethod:\n- Preheat oven to 400°F (5 minutes)\n- Season protein with herbs and spices (2 minutes)\n- Arrange protein and vegetables on a baking sheet (3 minutes)\n- Drizzle with olive oil and bake for 20-25 minutes\n- Cook grains separately according to package instructions\n- Serve protein and vegetables over grains\n\nOptional Extras:\n- Add a simple sauce made from available ingredients\n- Garnish with fresh herbs\n- Serve with a side salad\n\n3. Quick Soup or Stew\nIngredients:\n- 4 cups broth or water\n- 2 cups mixed vegetables\n- 1 cup protein\n- 1 onion, diced\n- 2 cloves garlic, minced\n- Herbs and spices to taste\n\nMethod:\n- Sauté onion and garlic in oil until softened (3 minutes)\n- Add protein and brown for 2-3 minutes\n- Add broth and bring to boil (5 minutes)\n- Add vegetables and simmer for 10-15 minutes\n- Season with herbs, salt, and pepper\n- Serve hot with bread or crackers\n\nOptional Extras:\n- Add a dollop of yogurt or cream for richness\n- Garnish with fresh herbs\n- Serve with crusty bread\n\nIMPORTANT: Follow this exact format with bullet points (-) for all lists. Include approximate timing in parentheses for method steps. Make recipes practical and easy to follow. If recipes would be too similar, include a wildcard recipe that uses only 1-2 of the listed ingredients. Do not use numbered steps in the method section.'
+                    }, {
+                        role: 'user',
+                        content: "Available ingredients: " + this.ingredients.join(', ') + ". User request: " + prompt
+                    }]
+                })
+            });
+            
+            console.log('📥 Debug: Response status:', response.status);
+            
+            if (!response.ok) {
+                console.error('❌ Debug: Proxy API request failed with status:', response.status);
+                let errorMessage = `Proxy API request failed: ${response.status}`;
+                
+                if (response.status === 429) {
+                    errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+                } else if (response.status === 500) {
+                    errorMessage = 'Proxy service error. Please try again later.';
+                } else if (response.status === 503) {
+                    errorMessage = 'Proxy service temporarily unavailable. Please try again later.';
+                }
+                
+                console.error('❌ Debug: Error message:', errorMessage);
+                throw new Error(errorMessage);
+            }
+            
+            console.log('✅ Debug: Proxy API request successful');
+            
+            const data = await response.json();
+            console.log('📥 Debug: Received response data:', data);
+            console.log('📝 Debug: Response content:', data.choices[0].message.content);
+            
+            const recipes = this.parseChatGPTResponse(data.choices[0].message.content);
+            console.log('🍳 Debug: Parsed recipes:', recipes);
+            return recipes;
+            
+        } catch (error) {
+            console.error('❌ Debug: Proxy API error:', error);
+            console.error('❌ Debug: Error message:', error.message);
+            
+            // Fallback to mock recipes for other errors
+            this.showToast('Proxy API error, showing sample recipes', 'error');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return this.generateMockRecipes(prompt);
+
+        } finally {
             this.isGenerating = false;
         }
     }
@@ -562,41 +652,12 @@ class RecipeApp {
         }
     }
 
-    checkFirstTimeUser() {
-        const hasSeenWelcome = localStorage.getItem('recipeApp_welcome_seen');
-        const hasApiKey = localStorage.getItem('recipeApp_openai_key');
-        
-        // Show welcome modal if user hasn't seen it and doesn't have an API key
-        if (!hasSeenWelcome && !hasApiKey) {
-            setTimeout(() => {
-                this.showWelcomeModal();
-            }, 500); // Small delay for better UX
-        }
-    }
 
-    showWelcomeModal() {
-        const modal = document.getElementById('welcomeModal');
-        modal.classList.add('show');
-        document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    }
-
-    closeWelcomeModal() {
-        const modal = document.getElementById('welcomeModal');
-        modal.classList.remove('show');
-        document.body.style.overflow = ''; // Restore scrolling
-        localStorage.setItem('recipeApp_welcome_seen', 'true');
-    }
 }
 
 // Global functions for modal interactions
 function openSettings() {
     window.location.href = 'settings.html';
-}
-
-function closeWelcomeModal() {
-    if (app) {
-        app.closeWelcomeModal();
-    }
 }
 
 // Initialize the app when the page loads
