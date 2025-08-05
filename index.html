@@ -65,9 +65,14 @@
             <!-- Navigation -->
             <section class="settings-section">
                 <div class="settings-content">
-                    <a href="settings.html" class="btn btn-primary" style="width: 100%; text-align: center;">
-                        <i class="fas fa-cog"></i> Settings
-                    </a>
+                    <div class="nav-buttons">
+                        <a href="#" id="showInstructions" class="btn btn-primary" style="flex: 1; text-align: center;">
+                            <i class="fas fa-question-circle"></i> Instructions
+                        </a>
+                        <a href="settings.html" class="btn btn-primary" style="flex: 1; text-align: center;">
+                            <i class="fas fa-cog"></i> Settings
+                        </a>
+                    </div>
                 </div>
             </section>
         </main>
@@ -75,6 +80,49 @@
 
     <!-- Toast notification -->
     <div class="toast" id="toast"></div>
+
+    <!-- Instructions Modal -->
+    <div class="modal-overlay" id="instructionsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-lightbulb"></i> How to Use Recipe Generator</h2>
+                <button class="modal-close" id="closeInstructionsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="instruction-step">
+                    <h3><i class="fas fa-carrot"></i> Step 1: Add Your Ingredients</h3>
+                    <p>Add any ingredients you remember having in your fridge or pantry. Don't worry about listing everything - just the main items you want to use.</p>
+                    <p><strong>Examples:</strong> capsicum, chicken, stock, garlic, onions, rice, tomatoes, etc.</p>
+                </div>
+                
+                <div class="instruction-step">
+                    <h3><i class="fas fa-comment"></i> Step 2: Describe What You're Craving</h3>
+                    <p>Tell us what you're in the mood for. Be as general or specific as you like!</p>
+                    <p><strong>Examples:</strong></p>
+                    <ul>
+                        <li>"A comfy warm soup that's easy"</li>
+                        <li>"Something for meal prep"</li>
+                        <li>"Quick and healthy dinner"</li>
+                        <li>"Spicy Asian-inspired dish"</li>
+                        <li>"Light lunch with fresh flavors"</li>
+                    </ul>
+                </div>
+                
+                <div class="instruction-step">
+                    <h3><i class="fas fa-magic"></i> Step 3: Generate & Choose</h3>
+                    <p>Press "Generate Recipes" and pick what you're going to cook! Save your favorites for later.</p>
+                </div>
+                
+                <div class="instruction-actions">
+                    <button class="btn btn-primary" onclick="closeInstructionsModal()">
+                        <i class="fas fa-check"></i> Got it!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

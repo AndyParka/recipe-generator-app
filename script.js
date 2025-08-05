@@ -11,6 +11,7 @@ class RecipeApp {
         this.setupEventListeners();
         this.renderIngredients();
         this.renderSavedRecipes();
+        this.checkFirstTimeUser();
     }
 
     setupEventListeners() {
@@ -22,6 +23,10 @@ class RecipeApp {
 
         // Generate recipes
         document.getElementById('generateRecipes').addEventListener('click', () => this.generateRecipes());
+
+        // Instructions modal
+        document.getElementById('showInstructions').addEventListener('click', () => this.showInstructionsModal());
+        document.getElementById('closeInstructionsModal').addEventListener('click', () => this.closeInstructionsModal());
     }
 
     addIngredient() {
@@ -647,6 +652,30 @@ class RecipeApp {
         localStorage.setItem('recipeApp_savedRecipes', JSON.stringify(this.savedRecipes));
     }
 
+    checkFirstTimeUser() {
+        const hasSeenInstructions = localStorage.getItem('recipeApp_instructions_seen');
+        
+        // Show instructions modal if user hasn't seen it
+        if (!hasSeenInstructions) {
+            setTimeout(() => {
+                this.showInstructionsModal();
+            }, 500); // Small delay for better UX
+        }
+    }
+
+    showInstructionsModal() {
+        const modal = document.getElementById('instructionsModal');
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    closeInstructionsModal() {
+        const modal = document.getElementById('instructionsModal');
+        modal.classList.remove('show');
+        document.body.style.overflow = ''; // Restore scrolling
+        localStorage.setItem('recipeApp_instructions_seen', 'true');
+    }
+
     loadFromStorage() {
         const savedIngredients = localStorage.getItem('recipeApp_ingredients');
         const savedRecipes = localStorage.getItem('recipeApp_savedRecipes');
@@ -666,6 +695,12 @@ class RecipeApp {
 // Global functions for modal interactions
 function openSettings() {
     window.location.href = 'settings.html';
+}
+
+function closeInstructionsModal() {
+    if (app) {
+        app.closeInstructionsModal();
+    }
 }
 
 // Initialize the app when the page loads
