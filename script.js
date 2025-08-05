@@ -159,22 +159,26 @@ class RecipeApp {
             console.log('📤 Debug: Sending request with ingredients:', this.ingredients);
             console.log('📤 Debug: User prompt:', prompt);
             
+            const requestBody = {
+                model: 'gpt-3.5-turbo',
+                messages: [{
+                    role: 'system',
+                    content: 'You are a helpful cooking assistant. Generate exactly 3 simple recipes based on available ingredients and user preferences. Use the ingredients listed as a guide and add/remove ingredients as needed. Follow this EXACT format and use these examples as your guide for quality:\n\n1. Quick Stir-Fry Delight\nIngredients:\n- 2 cups mixed vegetables (from your available ingredients)\n- 1 cup protein (chicken, tofu, or beef if available)\n- 2 tbsp olive oil\n- 2 cloves garlic, minced\n- 1 tbsp soy sauce\n- Salt and pepper to taste\n\nMethod:\n- Heat olive oil in a large wok or pan over high heat (2 minutes)\n- Add minced garlic and stir for 30 seconds\n- Add protein and cook for 3-4 minutes until browned\n- Add vegetables and stir-fry for 4-5 minutes\n- Season with soy sauce, salt, and pepper\n- Serve hot over rice or noodles\n\nOptional Extras:\n- Garnish with fresh herbs or green onions\n- Add a squeeze of lime for brightness\n- Serve with steamed rice or noodles\n\n2. One-Pan Wonder\nIngredients:\n- 1 lb protein of choice\n- 2 cups vegetables\n- 1 cup grains (rice, quinoa, or pasta)\n- 2 tbsp olive oil\n- Herbs and spices to taste\n\nMethod:\n- Preheat oven to 400°F (5 minutes)\n- Season protein with herbs and spices (2 minutes)\n- Arrange protein and vegetables on a baking sheet (3 minutes)\n- Drizzle with olive oil and bake for 20-25 minutes\n- Cook grains separately according to package instructions\n- Serve protein and vegetables over grains\n\nOptional Extras:\n- Add a simple sauce made from available ingredients\n- Garnish with fresh herbs\n- Serve with a side salad\n\n3. Quick Soup or Stew\nIngredients:\n- 4 cups broth or water\n- 2 cups mixed vegetables\n- 1 cup protein\n- 1 onion, diced\n- 2 cloves garlic, minced\n- Herbs and spices to taste\n\nMethod:\n- Sauté onion and garlic in oil until softened (3 minutes)\n- Add protein and brown for 2-3 minutes\n- Add broth and bring to boil (5 minutes)\n- Add vegetables and simmer for 10-15 minutes\n- Season with herbs, salt, and pepper\n- Serve hot with bread or crackers\n\nOptional Extras:\n- Add a dollop of yogurt or cream for richness\n- Garnish with fresh herbs\n- Serve with crusty bread\n\nIMPORTANT: Follow this exact format with bullet points (-) for all lists. Include approximate timing in parentheses for method steps. Make recipes practical and easy to follow. If recipes would be too similar, include a wildcard recipe that uses only 1-2 of the listed ingredients. Do not use numbered steps in the method section.'
+                }, {
+                    role: 'user',
+                    content: "Available ingredients: " + this.ingredients.join(', ') + ". User request: " + prompt
+                }]
+            };
+            
+            console.log('📤 Debug: Request body:', JSON.stringify(requestBody, null, 2));
+            
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`
                 },
-                body: JSON.stringify({
-                    model: 'gpt-3.5-turbo',
-                    messages: [{
-                        role: 'system',
-                        content: 'You are a helpful cooking assistant. Generate exactly 3 simple recipes based on available ingredients and user preferences. Use the ingredients listed as a guide and add/remove ingredients as needed. Follow this EXACT format and use these examples as your guide for quality:\n\n1. Quick Stir-Fry Delight\nIngredients:\n- 2 cups mixed vegetables (from your available ingredients)\n- 1 cup protein (chicken, tofu, or beef if available)\n- 2 tbsp olive oil\n- 2 cloves garlic, minced\n- 1 tbsp soy sauce\n- Salt and pepper to taste\n\nMethod:\n- Heat olive oil in a large wok or pan over high heat (2 minutes)\n- Add minced garlic and stir for 30 seconds\n- Add protein and cook for 3-4 minutes until browned\n- Add vegetables and stir-fry for 4-5 minutes\n- Season with soy sauce, salt, and pepper\n- Serve hot over rice or noodles\n\nOptional Extras:\n- Garnish with fresh herbs or green onions\n- Add a squeeze of lime for brightness\n- Serve with steamed rice or noodles\n\n2. One-Pan Wonder\nIngredients:\n- 1 lb protein of choice\n- 2 cups vegetables\n- 1 cup grains (rice, quinoa, or pasta)\n- 2 tbsp olive oil\n- Herbs and spices to taste\n\nMethod:\n- Preheat oven to 400°F (5 minutes)\n- Season protein with herbs and spices (2 minutes)\n- Arrange protein and vegetables on a baking sheet (3 minutes)\n- Drizzle with olive oil and bake for 20-25 minutes\n- Cook grains separately according to package instructions\n- Serve protein and vegetables over grains\n\nOptional Extras:\n- Add a simple sauce made from available ingredients\n- Garnish with fresh herbs\n- Serve with a side salad\n\n3. Quick Soup or Stew\nIngredients:\n- 4 cups broth or water\n- 2 cups mixed vegetables\n- 1 cup protein\n- 1 onion, diced\n- 2 cloves garlic, minced\n- Herbs and spices to taste\n\nMethod:\n- Sauté onion and garlic in oil until softened (3 minutes)\n- Add protein and brown for 2-3 minutes\n- Add broth and bring to boil (5 minutes)\n- Add vegetables and simmer for 10-15 minutes\n- Season with herbs, salt, and pepper\n- Serve hot with bread or crackers\n\nOptional Extras:\n- Add a dollop of yogurt or cream for richness\n- Garnish with fresh herbs\n- Serve with crusty bread\n\nIMPORTANT: Follow this exact format with bullet points (-) for all lists. Include approximate timing in parentheses for method steps. Make recipes practical and easy to follow. If recipes would be too similar, include a wildcard recipe that uses only 1-2 of the listed ingredients. Do not use numbered steps in the method section.'
-                    }, {
-                        role: 'user',
-                        content: "Available ingredients: " + this.ingredients.join(', ') + ". User request: " + prompt
-                    }]
-                })
+                body: JSON.stringify(requestBody)
             });
             
             console.log('📥 Debug: Response status:', response.status);
@@ -200,7 +204,7 @@ class RecipeApp {
             console.log('✅ Debug: API request successful');
             
             const data = await response.json();
-            console.log('📥 Debug: Received response data:', data);
+            console.log('📥 Debug: Received response data:', JSON.stringify(data, null, 2));
             console.log('📝 Debug: Response content:', data.choices[0].message.content);
             
             const recipes = this.parseChatGPTResponse(data.choices[0].message.content);
@@ -237,21 +241,25 @@ class RecipeApp {
             console.log('📤 Debug: Sending request with ingredients:', this.ingredients);
             console.log('📤 Debug: User prompt:', prompt);
             
+            const requestBody = {
+                model: 'gpt-3.5-turbo',
+                messages: [{
+                    role: 'system',
+                    content: 'You are a helpful cooking assistant. Generate exactly 3 simple recipes based on available ingredients and user preferences. Use the ingredients listed as a guide and add/remove ingredients as needed. Follow this EXACT format and use these examples as your guide for quality:\n\n1. Quick Stir-Fry Delight\nIngredients:\n- 2 cups mixed vegetables (from your available ingredients)\n- 1 cup protein (chicken, tofu, or beef if available)\n- 2 tbsp olive oil\n- 2 cloves garlic, minced\n- 1 tbsp soy sauce\n- Salt and pepper to taste\n\nMethod:\n- Heat olive oil in a large wok or pan over high heat (2 minutes)\n- Add minced garlic and stir for 30 seconds\n- Add protein and cook for 3-4 minutes until browned\n- Add vegetables and stir-fry for 4-5 minutes\n- Season with soy sauce, salt, and pepper\n- Serve hot over rice or noodles\n\nOptional Extras:\n- Garnish with fresh herbs or green onions\n- Add a squeeze of lime for brightness\n- Serve with steamed rice or noodles\n\n2. One-Pan Wonder\nIngredients:\n- 1 lb protein of choice\n- 2 cups vegetables\n- 1 cup grains (rice, quinoa, or pasta)\n- 2 tbsp olive oil\n- Herbs and spices to taste\n\nMethod:\n- Preheat oven to 400°F (5 minutes)\n- Season protein with herbs and spices (2 minutes)\n- Arrange protein and vegetables on a baking sheet (3 minutes)\n- Drizzle with olive oil and bake for 20-25 minutes\n- Cook grains separately according to package instructions\n- Serve protein and vegetables over grains\n\nOptional Extras:\n- Add a simple sauce made from available ingredients\n- Garnish with fresh herbs\n- Serve with a side salad\n\n3. Quick Soup or Stew\nIngredients:\n- 4 cups broth or water\n- 2 cups mixed vegetables\n- 1 cup protein\n- 1 onion, diced\n- 2 cloves garlic, minced\n- Herbs and spices to taste\n\nMethod:\n- Sauté onion and garlic in oil until softened (3 minutes)\n- Add protein and brown for 2-3 minutes\n- Add broth and bring to boil (5 minutes)\n- Add vegetables and simmer for 10-15 minutes\n- Season with herbs, salt, and pepper\n- Serve hot with bread or crackers\n\nOptional Extras:\n- Add a dollop of yogurt or cream for richness\n- Garnish with fresh herbs\n- Serve with crusty bread\n\nIMPORTANT: Follow this exact format with bullet points (-) for all lists. Include approximate timing in parentheses for method steps. Make recipes practical and easy to follow. If recipes would be too similar, include a wildcard recipe that uses only 1-2 of the listed ingredients. Do not use numbered steps in the method section.'
+                }, {
+                    role: 'user',
+                    content: "Available ingredients: " + this.ingredients.join(', ') + ". User request: " + prompt
+                }]
+            };
+            
+            console.log('📤 Debug: Request body:', JSON.stringify(requestBody, null, 2));
+            
             const response = await fetch('https://openai-proxy.andy-parka.workers.dev/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    model: 'gpt-3.5-turbo',
-                    messages: [{
-                        role: 'system',
-                        content: 'You are a helpful cooking assistant. Generate exactly 3 simple recipes based on available ingredients and user preferences. Use the ingredients listed as a guide and add/remove ingredients as needed. Follow this EXACT format and use these examples as your guide for quality:\n\n1. Quick Stir-Fry Delight\nIngredients:\n- 2 cups mixed vegetables (from your available ingredients)\n- 1 cup protein (chicken, tofu, or beef if available)\n- 2 tbsp olive oil\n- 2 cloves garlic, minced\n- 1 tbsp soy sauce\n- Salt and pepper to taste\n\nMethod:\n- Heat olive oil in a large wok or pan over high heat (2 minutes)\n- Add minced garlic and stir for 30 seconds\n- Add protein and cook for 3-4 minutes until browned\n- Add vegetables and stir-fry for 4-5 minutes\n- Season with soy sauce, salt, and pepper\n- Serve hot over rice or noodles\n\nOptional Extras:\n- Garnish with fresh herbs or green onions\n- Add a squeeze of lime for brightness\n- Serve with steamed rice or noodles\n\n2. One-Pan Wonder\nIngredients:\n- 1 lb protein of choice\n- 2 cups vegetables\n- 1 cup grains (rice, quinoa, or pasta)\n- 2 tbsp olive oil\n- Herbs and spices to taste\n\nMethod:\n- Preheat oven to 400°F (5 minutes)\n- Season protein with herbs and spices (2 minutes)\n- Arrange protein and vegetables on a baking sheet (3 minutes)\n- Drizzle with olive oil and bake for 20-25 minutes\n- Cook grains separately according to package instructions\n- Serve protein and vegetables over grains\n\nOptional Extras:\n- Add a simple sauce made from available ingredients\n- Garnish with fresh herbs\n- Serve with a side salad\n\n3. Quick Soup or Stew\nIngredients:\n- 4 cups broth or water\n- 2 cups mixed vegetables\n- 1 cup protein\n- 1 onion, diced\n- 2 cloves garlic, minced\n- Herbs and spices to taste\n\nMethod:\n- Sauté onion and garlic in oil until softened (3 minutes)\n- Add protein and brown for 2-3 minutes\n- Add broth and bring to boil (5 minutes)\n- Add vegetables and simmer for 10-15 minutes\n- Season with herbs, salt, and pepper\n- Serve hot with bread or crackers\n\nOptional Extras:\n- Add a dollop of yogurt or cream for richness\n- Garnish with fresh herbs\n- Serve with crusty bread\n\nIMPORTANT: Follow this exact format with bullet points (-) for all lists. Include approximate timing in parentheses for method steps. Make recipes practical and easy to follow. If recipes would be too similar, include a wildcard recipe that uses only 1-2 of the listed ingredients. Do not use numbered steps in the method section.'
-                    }, {
-                        role: 'user',
-                        content: "Available ingredients: " + this.ingredients.join(', ') + ". User request: " + prompt
-                    }]
-                })
+                body: JSON.stringify(requestBody)
             });
             
             console.log('📥 Debug: Response status:', response.status);
@@ -275,7 +283,7 @@ class RecipeApp {
             console.log('✅ Debug: Proxy API request successful');
             
             const data = await response.json();
-            console.log('📥 Debug: Received response data:', data);
+            console.log('📥 Debug: Received response data:', JSON.stringify(data, null, 2));
             console.log('📝 Debug: Response content:', data.choices[0].message.content);
             
             const recipes = this.parseChatGPTResponse(data.choices[0].message.content);
