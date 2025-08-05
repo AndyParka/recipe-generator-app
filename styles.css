@@ -698,6 +698,7 @@ section h2 i {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     transform: scale(0.9);
     transition: transform 0.3s ease;
+    margin: 20px 0;
 }
 
 .modal-overlay.show .modal {
@@ -808,7 +809,8 @@ section h2 i {
 @media (max-width: 768px) {
     .modal {
         width: 95%;
-        max-height: 95vh;
+        max-height: 90vh;
+        margin: 10px 0;
     }
     
     .modal-header {

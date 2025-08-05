@@ -683,6 +683,7 @@ class RecipeApp {
     initPWA() {
         // Check if the app is already installed
         if (window.matchMedia('(display-mode: standalone)').matches) {
+            console.log('App is already installed');
             return; // Already installed
         }
 
@@ -692,6 +693,7 @@ class RecipeApp {
         
         // Check if beforeinstallprompt event is supported
         window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('beforeinstallprompt event fired');
             // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
             
@@ -701,13 +703,16 @@ class RecipeApp {
 
         // Handle successful installation
         window.addEventListener('appinstalled', () => {
+            console.log('App installed successfully');
             const installButton = document.getElementById('addToHomeScreen');
             installButton.style.display = 'none';
             this.showToast('App installed successfully!', 'success');
         });
 
-        // FOR TESTING: Uncomment the line below to always show the button
-        document.getElementById('addToHomeScreen').style.display = 'block';
+        // Log browser info for debugging
+        console.log('Browser User Agent:', navigator.userAgent);
+        console.log('HTTPS:', window.location.protocol === 'https:');
+        console.log('Standalone mode:', window.matchMedia('(display-mode: standalone)').matches);
     }
 
     addToHomeScreen() {
