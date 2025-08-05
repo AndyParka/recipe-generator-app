@@ -609,6 +609,63 @@ section h2 i {
     border: 1px solid #e2e8f0;
 }
 
+/* Developer Credits Styles */
+.developer-info {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.developer-avatar {
+    margin-bottom: 16px;
+}
+
+.profile-pic {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid #667eea;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.developer-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 16px;
+}
+
+.developer-links {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.social-link:hover {
+    background: #5a67d8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.social-link i {
+    font-size: 1.1rem;
+}
+
 /* Modal Styles */
 .modal-overlay {
     position: fixed;

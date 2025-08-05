@@ -12,6 +12,7 @@ class RecipeApp {
         this.renderIngredients();
         this.renderSavedRecipes();
         this.checkFirstTimeUser();
+        this.initPWA();
     }
 
     setupEventListeners() {
@@ -27,6 +28,9 @@ class RecipeApp {
         // Instructions modal
         document.getElementById('showInstructions').addEventListener('click', () => this.showInstructionsModal());
         document.getElementById('closeInstructionsModal').addEventListener('click', () => this.closeInstructionsModal());
+
+        // Add to Home Screen
+        document.getElementById('addToHomeScreen').addEventListener('click', () => this.addToHomeScreen());
     }
 
     addIngredient() {
@@ -674,6 +678,76 @@ class RecipeApp {
         modal.classList.remove('show');
         document.body.style.overflow = ''; // Restore scrolling
         localStorage.setItem('recipeApp_instructions_seen', 'true');
+    }
+
+    initPWA() {
+        // Check if the app is already installed
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            return; // Already installed
+        }
+
+        // Show the install button always
+        const installButton = document.getElementById('addToHomeScreen');
+        installButton.style.display = 'block';
+        
+        // Check if beforeinstallprompt event is supported
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            
+            // Store the event so it can be triggered later
+            this.deferredPrompt = e;
+        });
+
+        // Handle successful installation
+        window.addEventListener('appinstalled', () => {
+            const installButton = document.getElementById('addToHomeScreen');
+            installButton.style.display = 'none';
+            this.showToast('App installed successfully!', 'success');
+        });
+
+        // FOR TESTING: Uncomment the line below to always show the button
+        document.getElementById('addToHomeScreen').style.display = 'block';
+    }
+
+    addToHomeScreen() {
+        if (this.deferredPrompt) {
+            // Show the install prompt
+            this.deferredPrompt.prompt();
+            
+            // Wait for the user to respond to the prompt
+            this.deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+                this.deferredPrompt = null;
+            });
+        } else {
+            // Fallback for browsers that don't support beforeinstallprompt
+            this.showManualInstallInstructions();
+        }
+    }
+
+    showManualInstallInstructions() {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+        const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+        
+        let message = '';
+        
+        if (isIOS && isSafari) {
+            message = 'To add to home screen:\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add"\n\nAlternative: Add to Bookmarks\n1. Tap the Share button\n2. Tap "Add Bookmark"\n3. Tap "Save"';
+        } else if (isIOS) {
+            message = 'To add to home screen:\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add"\n\nAlternative: Add to Bookmarks\n1. Tap the Share button\n2. Tap "Add Bookmark"\n3. Tap "Save"';
+        } else if (isAndroid) {
+            message = 'To add to home screen:\n1. Tap the menu button (⋮)\n2. Tap "Add to Home screen"\n3. Tap "Add"\n\nAlternative: Add to Bookmarks\n1. Tap the menu button (⋮)\n2. Tap "Bookmarks"\n3. Tap "Add bookmark"';
+        } else {
+            message = 'To add to home screen:\n1. Open your browser menu\n2. Look for "Add to Home Screen" or "Install App"\n3. Follow the prompts\n\nAlternative: Add to Bookmarks\n1. Press Ctrl+D (Windows) or Cmd+D (Mac)\n2. Or use your browser\'s bookmark menu';
+        }
+        
+        alert(message);
     }
 
     loadFromStorage() {
